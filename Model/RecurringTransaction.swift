@@ -58,7 +58,7 @@ final class RecurringTransaction {
     var interestTypeRaw: String?    // InterestType
     var principal: Double?          // 剩余本金
     var totalPeriods: Int?          // 总期数
-    var currentPeriod: Int          // 当前期数
+    var currentPeriod: Int = 1      // 当前期数
     @Relationship(deleteRule: .cascade, inverse: \Transaction.recurringTransaction) var generatedTransactions: [Transaction]?
 
     var interestType: InterestType {
