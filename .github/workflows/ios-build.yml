@@ -38,12 +38,8 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Install xcpretty
-        run: gem install xcpretty --no-document || true
-
       - name: Build (Simulator)
         run: |
-          set -o pipefail
           xcodebuild build \
             -project AccountBook.xcodeproj \
             -scheme AccountBook \
@@ -52,11 +48,18 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tee build.log | xcpretty || {
-              echo "=== BUILD FAILED (last 100 lines) ==="
-              tail -100 build.log
+            > build.log 2>&1 || {
+              echo "=== BUILD FAILED (last 120 lines) ==="
+              tail -120 build.log
               exit 1
             }
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
 
       # --- 打包 .ipa 需要 Apple Developer 账号 ---
       # 以下步骤被注释，配置好签名证书和 Provisioning Profile 后取消注释即可
@@ -84,10 +87,3 @@ jobs:
       #   with:
       #     name: AccountBook.ipa
       #     path: ./build/ipa/AccountBook.ipa
-
-      - name: Upload build log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: ~/Library/Logs/DiagnosticReports/

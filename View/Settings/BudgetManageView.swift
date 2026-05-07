@@ -75,8 +75,9 @@ struct BudgetEditView: View {
     @State private var selectedCategory: Category?
 
     private var expenseCategories: [Category] {
+        let expenseRawValue = TransactionType.expense.rawValue
         let descriptor = FetchDescriptor<Category>(
-            predicate: #Predicate { $0.typeRaw == TransactionType.expense.rawValue },
+            predicate: #Predicate { $0.typeRaw == expenseRawValue },
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         return (try? modelContext.fetch(descriptor)) ?? []
