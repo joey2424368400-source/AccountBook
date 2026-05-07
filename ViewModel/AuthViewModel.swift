@@ -97,7 +97,7 @@ final class AuthViewModel {
         isAuthenticated = false
     }
 
-    private func clearFields() {
+    func clearFields() {
         email = ""
         password = ""
         confirmPassword = ""
