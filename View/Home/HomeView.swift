@@ -46,6 +46,9 @@ struct HomeView: View {
             TransactionEditView()
         }
         .onAppear { viewModel.fetchData(modelContext: modelContext) }
+        .onChange(of: showAddSheet) { _, newValue in
+            if !newValue { viewModel.fetchData(modelContext: modelContext) }
+        }
         .refreshable { viewModel.fetchData(modelContext: modelContext) }
     }
 

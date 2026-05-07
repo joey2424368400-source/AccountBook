@@ -61,6 +61,9 @@ struct TransactionListView: View {
             }
         }
         .onAppear { viewModel.fetchTransactions(modelContext: modelContext) }
+        .onChange(of: showEditSheet) { _, newValue in
+            if !newValue { viewModel.fetchTransactions(modelContext: modelContext) }
+        }
         .refreshable { viewModel.fetchTransactions(modelContext: modelContext) }
     }
 
