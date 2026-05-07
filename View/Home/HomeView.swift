@@ -99,7 +99,7 @@ struct HomeView: View {
                                     .font(.system(size: 12))
                             }
                             .foregroundColor(.secondary)
-                            Text(account.balance.currencyFormatted)
+                            Text((viewModel.accountBalances[account.persistentModelID] ?? 0).currencyFormatted)
                                 .font(.system(size: 15, weight: .medium, design: .rounded))
                         }
                         .padding(.horizontal, 12)

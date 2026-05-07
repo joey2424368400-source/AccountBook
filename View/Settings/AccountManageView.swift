@@ -30,7 +30,7 @@ struct AccountManageView: View {
 
                         Spacer()
 
-                        Text(account.balance.currencyFormatted)
+                        Text((viewModel.accountBalances[account.persistentModelID] ?? 0).currencyFormatted)
                             .font(.system(size: 16, weight: .medium, design: .rounded))
                     }
                 }

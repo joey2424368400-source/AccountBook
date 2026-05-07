@@ -11,7 +11,8 @@ final class HomeViewModel {
     var currentMonthIncome: Double = 0
     var currentMonthExpense: Double = 0
     var currentMonthBalance: Double { currentMonthIncome - currentMonthExpense }
-    var totalBalance: Double { accounts.reduce(0) { $0 + $1.balance } }
+    var totalBalance: Double { accountBalances.values.reduce(0, +) }
+    var accountBalances: [PersistentIdentifier: Double] = [:]
 
     func fetchData(modelContext: ModelContext) {
         let now = Date()
@@ -32,6 +33,18 @@ final class HomeViewModel {
         // 账户
         let accountDescriptor = FetchDescriptor<Account>(sortBy: [SortDescriptor(\.sortOrder)])
         accounts = (try? modelContext.fetch(accountDescriptor)) ?? []
+
+        // 直接从交易查询计算各账户余额，绕过 SwiftData 关系缓存
+        let allTxDescriptor = FetchDescriptor<Transaction>()
+        let allTransactions = (try? modelContext.fetch(allTxDescriptor)) ?? []
+        var balances: [PersistentIdentifier: Double] = [:]
+        for account in accounts {
+            let txForAccount = allTransactions.filter { $0.account?.persistentModelID == account.persistentModelID }
+            let income = txForAccount.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+            let expense = txForAccount.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+            balances[account.persistentModelID] = account.initialBalance + income - expense
+        }
+        accountBalances = balances
 
         // 预算
         let budgetDescriptor = FetchDescriptor<Budget>()

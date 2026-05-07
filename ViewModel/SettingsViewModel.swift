@@ -6,6 +6,7 @@ import SwiftData
 final class SettingsViewModel {
     var categories: [Category] = []
     var accounts: [Account] = []
+    var accountBalances: [PersistentIdentifier: Double] = [:]
     var budgets: [Budget] = []
     var reminders: [BillReminder] = []
     var recurringTransactions: [RecurringTransaction] = []
@@ -26,6 +27,17 @@ final class SettingsViewModel {
     func fetchAccounts(modelContext: ModelContext) {
         let descriptor = FetchDescriptor<Account>(sortBy: [SortDescriptor(\.sortOrder)])
         accounts = (try? modelContext.fetch(descriptor)) ?? []
+
+        let allTxDescriptor = FetchDescriptor<Transaction>()
+        let allTransactions = (try? modelContext.fetch(allTxDescriptor)) ?? []
+        var balances: [PersistentIdentifier: Double] = [:]
+        for account in accounts {
+            let txForAccount = allTransactions.filter { $0.account?.persistentModelID == account.persistentModelID }
+            let income = txForAccount.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+            let expense = txForAccount.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+            balances[account.persistentModelID] = account.initialBalance + income - expense
+        }
+        accountBalances = balances
     }
 
     func fetchBudgets(modelContext: ModelContext) {
