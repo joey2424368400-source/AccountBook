@@ -61,29 +61,37 @@ jobs:
           name: build-log
           path: build.log
 
-      # --- 打包 .ipa 需要 Apple Developer 账号 ---
-      # 以下步骤被注释，配置好签名证书和 Provisioning Profile 后取消注释即可
-      #
-      # - name: Archive
-      #   run: |
-      #     xcodebuild archive \
-      #       -project AccountBook.xcodeproj \
-      #       -scheme AccountBook \
-      #       -archivePath ./build/AccountBook.xcarchive \
-      #       -destination 'generic/platform=iOS' \
-      #       CODE_SIGN_STYLE=Manual \
-      #       PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE }}" \
-      #       CODE_SIGN_IDENTITY="${{ secrets.CODE_SIGN_IDENTITY }}"
-      #
-      # - name: Export IPA
-      #   run: |
-      #     xcodebuild -exportArchive \
-      #       -archivePath ./build/AccountBook.xcarchive \
-      #       -exportPath ./build/ipa \
-      #       -exportOptionsPlist exportOptions.plist
-      #
-      # - name: Upload IPA
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: AccountBook.ipa
-      #     path: ./build/ipa/AccountBook.ipa
+      - name: Build Unsigned IPA (Device)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project AccountBook.xcodeproj \
+            -scheme AccountBook \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            > build-device.log 2>&1 || {
+              echo "=== BUILD FAILED (last 120 lines) ==="
+              tail -120 build-device.log
+              exit 1
+            }
+
+          APP_PATH=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "AccountBook.app" -path "*/Release-iphoneos/*" 2>/dev/null | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: Could not find AccountBook.app"
+            exit 1
+          fi
+          echo "Found app at: $APP_PATH"
+
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r AccountBook.ipa Payload
+          echo "IPA created: $(ls -lh AccountBook.ipa)"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AccountBook-unsigned.ipa
+          path: AccountBook.ipa
