@@ -24,6 +24,7 @@ struct TransactionListView: View {
                                     showEditSheet = true
                                 } label: {
                                     TransactionRow(transaction: transaction)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                                 .swipeActions(edge: .trailing) {
