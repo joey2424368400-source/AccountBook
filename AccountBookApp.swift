@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct AccountBookApp: App {
     @StateObject private var notificationService = NotificationService()
+    @State private var authViewModel = AuthViewModel()
 
     var modelContainer: ModelContainer = {
         let schema = Schema([
@@ -24,15 +25,22 @@ struct AccountBookApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .onAppear {
-                    notificationService.requestAuthorization()
-                    seedDataIfNeeded()
-                    RecurringTransactionService.processRecurringTransactions(modelContext: modelContainer.mainContext)
+            if authViewModel.isAuthenticated {
+                ContentView()
+                    .onAppear {
+                        notificationService.requestAuthorization()
+                        seedDataIfNeeded()
+                        RecurringTransactionService.processRecurringTransactions(modelContext: modelContainer.mainContext)
+                    }
+            } else {
+                NavigationStack {
+                    LoginView()
                 }
+            }
         }
         .modelContainer(modelContainer)
         .environmentObject(notificationService)
+        .environment(authViewModel)
     }
 
     private func seedDataIfNeeded() {
