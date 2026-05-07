@@ -23,8 +23,7 @@ struct TransactionRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                AmountText(amount: transaction.amount, type: transaction.type)
-                    .fontSize(15)
+                AmountText(amount: transaction.amount, type: transaction.type, fontSize: 15)
                 Text(transaction.date.relativeFormatted)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
