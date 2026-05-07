@@ -1,0 +1,19 @@
+# Xcode
+*.xcworkspace
+*.xcuserdata
+*.xcodeproj
+DerivedData/
+
+# Swift
+.build/
+
+# Cocoapods
+Pods/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
