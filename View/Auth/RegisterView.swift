@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RegisterView: View {
     @Environment(AuthViewModel.self) private var auth
+    @Environment(\.dismiss) private var dismiss
     @State private var isSecure = true
     @State private var isConfirmSecure = true
 
@@ -141,6 +142,14 @@ struct RegisterView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.blue)
                 }
+
+                // 跳过
+                Button("暂不登录，离线使用") {
+                    auth.clearFields()
+                    dismiss()
+                }
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
             }
             .padding(.horizontal, 28)
             .padding(.bottom, 40)

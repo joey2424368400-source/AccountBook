@@ -25,18 +25,12 @@ struct AccountBookApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if authViewModel.isAuthenticated {
-                ContentView()
-                    .onAppear {
-                        notificationService.requestAuthorization()
-                        seedDataIfNeeded()
-                        RecurringTransactionService.processRecurringTransactions(modelContext: modelContainer.mainContext)
-                    }
-            } else {
-                NavigationStack {
-                    LoginView()
+            ContentView()
+                .onAppear {
+                    notificationService.requestAuthorization()
+                    seedDataIfNeeded()
+                    RecurringTransactionService.processRecurringTransactions(modelContext: modelContainer.mainContext)
                 }
-            }
         }
         .modelContainer(modelContainer)
         .environmentObject(notificationService)

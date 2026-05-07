@@ -13,50 +13,60 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            // 账号
+            // 账号 / 登录入口
             Section("账号") {
-                HStack {
-                    Text("当前账号")
-                    Spacer()
-                    Text(AuthService.shared.currentEmail ?? "")
-                        .foregroundColor(.secondary)
-                }
-                Button(role: .destructive) {
-                    auth.logout()
-                } label: {
-                    Label("退出登录", systemImage: "rectangle.portrait.and.arrow.right")
+                if auth.isAuthenticated {
+                    HStack {
+                        Text("当前账号")
+                        Spacer()
+                        Text(AuthService.shared.currentEmail ?? "")
+                            .foregroundColor(.secondary)
+                    }
+                    Button(role: .destructive) {
+                        auth.logout()
+                    } label: {
+                        Label("退出登录", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                } else {
+                    NavigationLink {
+                        LoginView()
+                    } label: {
+                        Label("登录以启用云同步", systemImage: "person.circle")
+                    }
                 }
             }
 
-            // 数据同步
-            Section("数据同步") {
-                Button {
-                    Task { await backupData() }
-                } label: {
-                    HStack {
-                        Label("备份到云端", systemImage: "icloud.and.arrow.up")
-                        Spacer()
-                        if isSyncing {
-                            ProgressView()
+            // 数据同步（仅登录后可见）
+            if auth.isAuthenticated {
+                Section("数据同步") {
+                    Button {
+                        Task { await backupData() }
+                    } label: {
+                        HStack {
+                            Label("备份到云端", systemImage: "icloud.and.arrow.up")
+                            Spacer()
+                            if isSyncing {
+                                ProgressView()
+                            }
                         }
                     }
-                }
-                .disabled(isSyncing)
+                    .disabled(isSyncing)
 
-                Button {
-                    showRestoreConfirm = true
-                } label: {
-                    Label("从云端恢复", systemImage: "icloud.and.arrow.down")
-                }
-                .disabled(isSyncing)
+                    Button {
+                        showRestoreConfirm = true
+                    } label: {
+                        Label("从云端恢复", systemImage: "icloud.and.arrow.down")
+                    }
+                    .disabled(isSyncing)
 
-                if let lastSync = SyncService.shared.lastSyncedAt {
-                    HStack {
-                        Text("上次同步")
-                        Spacer()
-                        Text(formatSyncDate(lastSync))
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
+                    if let lastSync = SyncService.shared.lastSyncedAt {
+                        HStack {
+                            Text("上次同步")
+                            Spacer()
+                            Text(formatSyncDate(lastSync))
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
             }
