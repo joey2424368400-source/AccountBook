@@ -30,7 +30,10 @@ struct SettingsView: View {
             }
 
             // 数据导出
-            Section("数据") {
+            Section("工具") {
+                NavigationLink(destination: InterestCalculatorView()) {
+                    Label("利息计算器", systemImage: "percent")
+                }
                 Button {
                     exportCSV()
                 } label: {

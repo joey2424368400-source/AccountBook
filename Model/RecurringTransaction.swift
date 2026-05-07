@@ -53,7 +53,50 @@ final class RecurringTransaction {
     var createdAt: Date
     var category: Category?
     var account: Account?
+    // 利息相关
+    var interestRate: Double?       // 年利率 (0.18 = 18%), nil = 无利息
+    var interestTypeRaw: String?    // InterestType
+    var principal: Double?          // 剩余本金
+    var totalPeriods: Int?          // 总期数
+    var currentPeriod: Int          // 当前期数
     @Relationship(deleteRule: .cascade, inverse: \Transaction.recurringTransaction) var generatedTransactions: [Transaction]?
+
+    var interestType: InterestType {
+        get { InterestType(rawValue: interestTypeRaw ?? "") ?? .none }
+        set { interestTypeRaw = newValue.rawValue }
+    }
+
+    var hasInterest: Bool {
+        interestRate != nil && interestRate! > 0 && interestType != .none
+    }
+
+    var currentPeriodInterest: Double {
+        guard hasInterest, let principal = principal, let rate = interestRate, let total = totalPeriods else { return 0 }
+        return InterestCalculator.currentPeriodInterest(
+            type: interestType,
+            principal: principal,
+            annualRate: rate,
+            currentPeriod: currentPeriod,
+            totalPeriods: total
+        )
+    }
+
+    var totalPaymentThisPeriod: Double {
+        amount + currentPeriodInterest
+    }
+
+    /// 还款计划明细 (用于利息计算器视图)
+    var amortizationPlan: [InterestResult] {
+        guard hasInterest, let principal = principal, let rate = interestRate, let total = totalPeriods else { return [] }
+        return InterestCalculator.calculate(type: interestType, principal: principal, annualRate: rate, totalPeriods: total)
+    }
+
+    /// 当前期的还款计划行
+    var interestResultForCurrentPeriod: InterestResult? {
+        let plan = amortizationPlan
+        let idx = min(currentPeriod - 1, plan.count - 1)
+        return idx >= 0 && idx < plan.count ? plan[idx] : nil
+    }
 
     var type: RecurringType {
         get { RecurringType(rawValue: typeRaw) ?? .other }
@@ -74,7 +117,12 @@ final class RecurringTransaction {
         isEnabled: Bool = true,
         note: String = "",
         category: Category? = nil,
-        account: Account? = nil
+        account: Account? = nil,
+        interestRate: Double? = nil,
+        interestType: InterestType = .none,
+        principal: Double? = nil,
+        totalPeriods: Int? = nil,
+        currentPeriod: Int = 1
     ) {
         self.id = UUID()
         self.name = name
@@ -87,6 +135,11 @@ final class RecurringTransaction {
         self.createdAt = Date()
         self.category = category
         self.account = account
+        self.interestRate = interestRate
+        self.interestTypeRaw = interestType.rawValue
+        self.principal = principal
+        self.totalPeriods = totalPeriods
+        self.currentPeriod = currentPeriod
         self.generatedTransactions = []
     }
 }
