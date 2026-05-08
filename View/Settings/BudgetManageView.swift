@@ -72,6 +72,7 @@ struct BudgetEditView: View {
 
     @State private var amount: String = ""
     @State private var period: BudgetPeriod = .monthly
+    @State private var cycleStartDay: Int = 1
     @State private var selectedCategory: Category?
 
     private var expenseCategories: [Category] {
@@ -89,6 +90,7 @@ struct BudgetEditView: View {
         if let b = budget {
             _amount = State(initialValue: String(format: "%.2f", b.amount))
             _period = State(initialValue: b.period)
+            _cycleStartDay = State(initialValue: b.cycleStartDay)
             _selectedCategory = State(initialValue: b.category)
         }
     }
@@ -108,6 +110,13 @@ struct BudgetEditView: View {
                     Picker("周期", selection: $period) {
                         ForEach(BudgetPeriod.allCases, id: \.self) { p in
                             Text(p.displayName).tag(p)
+                        }
+                    }
+                    if period == .monthly {
+                        Picker("起始日", selection: $cycleStartDay) {
+                            ForEach(1...28, id: \.self) { day in
+                                Text("每月\(day)号").tag(day)
+                            }
                         }
                     }
                 }
@@ -136,10 +145,11 @@ struct BudgetEditView: View {
                         if let existing = existingBudget {
                             existing.amount = Double(amount) ?? 0
                             existing.period = period
+                            existing.cycleStartDay = cycleStartDay
                             existing.category = selectedCategory
                             budget = existing
                         } else {
-                            budget = Budget(amount: Double(amount) ?? 0, period: period, category: selectedCategory)
+                            budget = Budget(amount: Double(amount) ?? 0, period: period, category: selectedCategory, cycleStartDay: cycleStartDay)
                         }
                         onSave(budget)
                         dismiss()
